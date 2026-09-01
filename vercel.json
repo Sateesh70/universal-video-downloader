@@ -2,17 +2,9 @@
   "version": 2,
   "cleanUrls": true,
   "routes": [
-    {
-      "src": "/sitemap.xml",
-      "dest": "/sitemap.xml"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/robots.txt"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
+    { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "src": "/ads.txt", "dest": "/ads.txt" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
