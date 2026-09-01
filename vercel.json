@@ -5,6 +5,7 @@
     { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "src": "/ads.txt", "dest": "/ads.txt" },
+    { "src": "/7a9b3c4d5e6f7a8b9c0d1e2f3a4b5c6d.txt", "dest": "/7a9b3c4d5e6f7a8b9c0d1e2f3a4b5c6d.txt" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
