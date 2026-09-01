@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Media Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-slate-800 rounded-xl p-6 shadow-xl space-y-4 border border-slate-700">
+    <div class="text-center space-y-1">
+      <h1 class="text-2xl font-bold tracking-tight">Universal Media Downloader</h1>
+      <p class="text-xs text-slate-400">Twitter (X), Instagram Reels, TikTok to MP4 & MP3</p>
+    </div>
+    
+    <div class="flex gap-2">
+      <input id="videoUrl" type="url" placeholder="Paste link here..." 
+        class="w-full px-4 py-2 rounded bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-slate-400">
+      <button onclick="fetchVideo()" 
+        class="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2 rounded text-sm transition shrink-0">
+        Fetch
+      </button>
+    </div>
+
+    <div id="loader" class="hidden text-center text-sm text-slate-400 animate-pulse">Extracting media details...</div>
+    <div id="error" class="hidden text-center text-sm text-red-400 bg-red-950/40 p-2.5 rounded border border-red-900"></div>
+
+    <div id="result" class="hidden space-y-4 pt-2">
+      <div class="relative">
+        <img id="thumb" class="rounded-lg w-full object-cover max-h-52 border border-slate-700" />
+        <span id="platformTag" class="absolute top-2 right-2 bg-black/75 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded backdrop-blur-sm border border-emerald-500/30"></span>
+      </div>
+
+      <h2 id="videoTitle" class="text-sm font-semibold line-clamp-2 text-slate-200"></h2>
+      
+      <div class="space-y-2">
+        <!-- MP4 Video Button -->
+        <button id="mp4Btn" onclick="triggerDownload('mp4')" 
+           class="w-full flex justify-between items-center bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-3 px-4 rounded-lg transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <span>🎬 Download Video (.mp4)</span>
+          <span class="bg-emerald-700/60 px-2 py-0.5 rounded text-[11px]">Full HD + Audio</span>
+        </button>
+
+        <!-- MP3 Audio Button -->
+        <button id="mp3Btn" onclick="triggerDownload('mp3')" 
+           class="w-full flex justify-between items-center bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-3 px-4 rounded-lg transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <span>🎵 Download Audio (.mp3)</span>
+          <span class="bg-amber-700/60 px-2 py-0.5 rounded text-[11px]">192kbps Audio Only</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+ <script>
+    const BACKEND_URL = "https://universal-video-downloader-y75m.onrender.com";
+    let currentTargetUrl = "";
+
+    async function fetchVideo() {
+      const url = document.getElementById('videoUrl').value.trim();
+      const loader = document.getElementById('loader');
+      const error = document.getElementById('error');
+      const result = document.getElementById('result');
+
+      if (!url) return;
+
+      loader.classList.remove('hidden');
+      error.classList.add('hidden');
+      result.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/extract`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to fetch media');
+
+        currentTargetUrl = data.url;
+        document.getElementById('videoTitle').innerText = data.title;
+        document.getElementById('thumb').src = data.thumbnail || '';
+        document.getElementById('platformTag').innerText = data.platform.toUpperCase();
+
+        resetButtons();
+        result.classList.remove('hidden');
+      } catch (err) {
+        error.innerText = err.message;
+        error.classList.remove('hidden');
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    function resetButtons() {
+      const mp4Btn = document.getElementById('mp4Btn');
+      const mp3Btn = document.getElementById('mp3Btn');
+      if (mp4Btn) {
+        mp4Btn.disabled = false;
+        mp4Btn.innerHTML = `<span>🎬 Download Video (.mp4)</span><span class="bg-emerald-700/60 px-2 py-0.5 rounded text-[11px]">Full HD + Audio</span>`;
+      }
+      if (mp3Btn) {
+        mp3Btn.disabled = false;
+        mp3Btn.innerHTML = `<span>🎵 Download Audio (.mp3)</span><span class="bg-amber-700/60 px-2 py-0.5 rounded text-[11px]">192kbps Audio Only</span>`;
+      }
+    }
+
+    async function triggerDownload(type) {
+      if (!currentTargetUrl) return;
+
+      const mp4Btn = document.getElementById('mp4Btn');
+      const mp3Btn = document.getElementById('mp3Btn');
+      const activeBtn = type === 'mp4' ? mp4Btn : mp3Btn;
+
+      if (mp4Btn) mp4Btn.disabled = true;
+      if (mp3Btn) mp3Btn.disabled = true;
+      if (activeBtn) {
+        activeBtn.innerHTML = `<span class="w-full text-center">Processing ${type.toUpperCase()}... please wait</span>`;
+      }
+
+      // Trigger download via your Render backend
+      const downloadEndpoint = `${BACKEND_URL}/api/download?url=${encodeURIComponent(currentTargetUrl)}&format_type=${type}`;
+      window.location.href = downloadEndpoint;
+
+      setTimeout(() => {
+        resetButtons();
+      }, 7000);
+    }
+  </script>
+</body>
+</html>
